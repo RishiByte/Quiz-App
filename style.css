@@ -1,49 +1,158 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-  background: #0f172a;
-  font-family: Arial;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  color: white;
+    font-family: 'Inter', sans-serif;
+    background-color: #0f172a;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+    color: #f8fafc;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
-.quiz-box {
-  background: #1e293b;
-  padding: 20px;
-  border-radius: 12px;
-  width: 420px;
-  text-align: center;
+.quiz-container {
+    background-color: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 40px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    /* Subtle appearing animation */
+    animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(10px);
 }
 
-button {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border: none;
-  cursor: pointer;
-  border-radius: 6px;
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.answer {
-  background: #334155;
-  color: white;
+.quiz-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.answer:hover {
-  background: #475569;
+.question-number {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6366f1;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.correct {
-  background: green !important;
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    overflow: hidden;
 }
 
-.wrong {
-  background: red !important;
+.progress-fill {
+    height: 100%;
+    background-color: #6366f1;
+    border-radius: 999px;
+    transition: width 0.3s ease;
 }
 
-#nextBtn {
-  background: #38bdf8;
-  color: black;
+.question-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #f8fafc;
+}
+
+.options-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.option-btn {
+    background-color: rgba(51, 65, 85, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    color: #f8fafc;
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 16px 20px;
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.option-btn:hover {
+    background-color: rgba(71, 85, 105, 0.8);
+    transform: translateY(-2px);
+}
+
+.option-btn.selected {
+    background-color: rgba(99, 102, 241, 0.2);
+    border-color: #6366f1;
+    box-shadow: 0 0 0 1px #6366f1;
+}
+
+.quiz-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.next-btn {
+    background-color: #6366f1;
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4), 0 2px 4px -1px rgba(99, 102, 241, 0.2);
+}
+
+.next-btn:hover {
+    background-color: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.5), 0 4px 6px -2px rgba(99, 102, 241, 0.3);
+}
+
+.next-btn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 600px) {
+    .quiz-container {
+        padding: 30px 20px;
+        gap: 24px;
+    }
+    .question-text {
+        font-size: 1.25rem;
+    }
+    .option-btn {
+        padding: 14px 16px;
+        font-size: 0.95rem;
+    }
 }

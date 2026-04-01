@@ -1,85 +1,99 @@
 let questions = [];
-let index = 0;
+let currentQuestionIndex = 0;
 let score = 0;
-let answered = false;
 
-const questionEl = document.getElementById("question");
-const answersEl = document.getElementById("answers");
-const nextBtn = document.getElementById("nextBtn");
-const scoreEl = document.getElementById("score");
+const questionTextElement = document.querySelector('.question-text');
+const optionsSection = document.querySelector('.options-section');
+const nextButton = document.querySelector('.next-btn');
+const questionNumberElement = document.querySelector('.question-number');
+const progressFill = document.querySelector('.progress-fill');
 
-function decodeHTML(html) {
-  const txt = document.createElement("textarea");
-  txt.innerHTML = html;
-  return txt.value;
-}
-
-async function getQuestions() {
-  const res = await fetch("https://opentdb.com/api.php?amount=5&category=18&difficulty=easy&type=multiple");
-  const data = await res.json();
-  questions = data.results;
-  showQuestion();
-}
-function showQuestion() {
-  answered = false;
-  nextBtn.style.display = "none";
-
-  const q = questions[index];
-
-  questionEl.innerHTML = decodeHTML(q.question);
-  answersEl.innerHTML = "";
-
-  let options = [...q.incorrect_answers, q.correct_answer];
-  options.sort(() => Math.random() - 0.5);
-
-  options.forEach(option => {
-    const btn = document.createElement("button");
-    btn.classList.add("answer");
-    btn.innerHTML = decodeHTML(option);
-
-    btn.onclick = () => selectAnswer(btn, option, q.correct_answer);
-
-    answersEl.appendChild(btn);
-  });
-}
-
-function selectAnswer(button, selected, correct) {
-  if (answered) return;
-
-  answered = true;
-  nextBtn.style.display = "block";
-
-  const buttons = document.querySelectorAll(".answer");
-
-  buttons.forEach(btn => {
-    if (decodeHTML(btn.innerHTML) === decodeHTML(correct)) {
-      btn.classList.add("correct");
+async function fetchQuestions() {
+    questionTextElement.textContent = "Loading questions...";
+    optionsSection.innerHTML = '';
+    
+    try {
+        const response = await fetch('https://opentdb.com/api.php?amount=10&type=multiple');
+        const data = await response.json();
+        
+        questions = data.results.map(q => {
+            const formattedQuestion = {
+                question: q.question,
+                correctAnswer: q.correct_answer,
+                options: [...q.incorrect_answers, q.correct_answer]
+            };
+            
+            formattedQuestion.options.sort(() => Math.random() - 0.5);
+            
+            return formattedQuestion;
+        });
+        
+        currentQuestionIndex = 0;
+        score = 0;
+        renderQuestion();
+    } catch (error) {
+        console.error("Error fetching questions:", error);
+        questionTextElement.textContent = "Failed to load questions. Please refresh the page.";
     }
-  });
-
-  if (selected === correct) {
-    score++;
-    button.classList.add("correct");
-  } else {
-    button.classList.add("wrong");
-  }
 }
 
-nextBtn.onclick = () => {
-  index++;
+function renderQuestion() {
+    if (questions.length === 0) return;
 
-  if (index < questions.length) {
-    showQuestion();
-  } else {
-    showScore();
-  }
-};
-
-function showScore() {
-  questionEl.innerHTML = "Quiz Completed!";
-  answersEl.innerHTML = "";
-  nextBtn.style.display = "none";
-  scoreEl.innerHTML = `Score: ${score}/${questions.length}`;
+    const currentQuestion = questions[currentQuestionIndex];
+    
+    questionNumberElement.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+    progressFill.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+    
+    questionTextElement.innerHTML = currentQuestion.question;
+    
+    optionsSection.innerHTML = '';
+    
+    currentQuestion.options.forEach(option => {
+        const button = document.createElement('button');
+        button.classList.add('option-btn');
+        button.innerHTML = option;
+        
+        button.addEventListener('click', () => {
+            const allOptions = document.querySelectorAll('.option-btn');
+            allOptions.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+        });
+        
+        optionsSection.appendChild(button);
+    });
+    
+    if (currentQuestionIndex === questions.length - 1) {
+        nextButton.textContent = "Finish Quiz";
+    } else {
+        nextButton.textContent = "Next Question";
+    }
 }
 
-getQuestions();
+nextButton.addEventListener('click', () => {
+    const selectedOption = document.querySelector('.option-btn.selected');
+    if (!selectedOption) {
+        alert("Please select an option before continuing.");
+        return;
+    }
+    
+    if (selectedOption.innerHTML === questions[currentQuestionIndex].correctAnswer) {
+        score++;
+    }
+    
+    if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        renderQuestion();
+    } else {
+        const quizContainer = document.querySelector('.quiz-container');
+        quizContainer.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <h2>Quiz Completed!</h2>
+                <p style="font-size: 24px; margin-top: 20px;">Your score: <strong>${score} / ${questions.length}</strong></p>
+                <button class="next-btn" style="margin-top: 30px;" onclick="location.reload()">Restart Quiz</button>
+            </div>
+        `;
+    }
+});
+
+document.addEventListener('DOMContentLoaded', fetchQuestions);

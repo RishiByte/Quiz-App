@@ -1,19 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Quiz App</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Quiz</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<div class="quiz-box">
-  <h2 id="question">Loading...</h2>
-  <div id="answers"></div>
-  <button id="nextBtn">Next</button>
-  <p id="score"></p>
-</div>
-
-<script src="script.js"></script>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <span class="question-number">Question 1 of 10</span>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 10%;"></div>
+            </div>
+        </div>
+        
+        <div class="question-section">
+            <h2 class="question-text">Which planet is known as the Red Planet?</h2>
+        </div>
+        
+        <div class="options-section">
+            <button class="option-btn">Venus</button>
+            <button class="option-btn selected">Mars</button>
+            <button class="option-btn">Jupiter</button>
+            <button class="option-btn">Saturn</button>
+        </div>
+        
+        <div class="quiz-footer">
+            <button class="next-btn">Next Question</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
