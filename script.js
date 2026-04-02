@@ -8,6 +8,12 @@ const nextButton = document.querySelector('.next-btn');
 const questionNumberElement = document.querySelector('.question-number');
 const progressFill = document.querySelector('.progress-fill');
 
+function decodeHTML(html) {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    return txt.value;
+}
+
 async function fetchQuestions() {
     questionTextElement.textContent = "Loading questions...";
     optionsSection.innerHTML = '';
@@ -18,9 +24,9 @@ async function fetchQuestions() {
         
         questions = data.results.map(q => {
             const formattedQuestion = {
-                question: q.question,
-                correctAnswer: q.correct_answer,
-                options: [...q.incorrect_answers, q.correct_answer]
+                question: decodeHTML(q.question),
+                correctAnswer: decodeHTML(q.correct_answer),
+                options: [...q.incorrect_answers.map(decodeHTML), decodeHTML(q.correct_answer)]
             };
             
             formattedQuestion.options.sort(() => Math.random() - 0.5);
@@ -55,45 +61,44 @@ function renderQuestion() {
         button.innerHTML = option;
         
         button.addEventListener('click', () => {
+            if (optionsSection.classList.contains('answered')) return;
+            optionsSection.classList.add('answered');
+            
+            const isCorrect = option === currentQuestion.correctAnswer;
+            if (isCorrect) score++;
+            
             const allOptions = document.querySelectorAll('.option-btn');
-            allOptions.forEach(btn => btn.classList.remove('selected'));
-            button.classList.add('selected');
+            allOptions.forEach(btn => {
+                btn.disabled = true;
+                if (btn.innerHTML === currentQuestion.correctAnswer) {
+                    btn.classList.add('correct');
+                } else if (btn === button && !isCorrect) {
+                    btn.classList.add('incorrect');
+                }
+            });
+            
+            setTimeout(() => {
+                optionsSection.classList.remove('answered');
+                if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    renderQuestion();
+                } else {
+                    const quizContainer = document.querySelector('.quiz-container');
+                    quizContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <h2>Quiz Completed!</h2>
+                            <p style="font-size: 24px; margin-top: 20px;">Your score: <strong>${score} / ${questions.length}</strong></p>
+                            <button class="next-btn" style="margin-top: 30px;" onclick="location.reload()">Restart Quiz</button>
+                        </div>
+                    `;
+                }
+            }, 1000);
         });
         
         optionsSection.appendChild(button);
     });
     
-    if (currentQuestionIndex === questions.length - 1) {
-        nextButton.textContent = "Finish Quiz";
-    } else {
-        nextButton.textContent = "Next Question";
-    }
+    nextButton.style.display = 'none';
 }
-
-nextButton.addEventListener('click', () => {
-    const selectedOption = document.querySelector('.option-btn.selected');
-    if (!selectedOption) {
-        alert("Please select an option before continuing.");
-        return;
-    }
-    
-    if (selectedOption.innerHTML === questions[currentQuestionIndex].correctAnswer) {
-        score++;
-    }
-    
-    if (currentQuestionIndex < questions.length - 1) {
-        currentQuestionIndex++;
-        renderQuestion();
-    } else {
-        const quizContainer = document.querySelector('.quiz-container');
-        quizContainer.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <h2>Quiz Completed!</h2>
-                <p style="font-size: 24px; margin-top: 20px;">Your score: <strong>${score} / ${questions.length}</strong></p>
-                <button class="next-btn" style="margin-top: 30px;" onclick="location.reload()">Restart Quiz</button>
-            </div>
-        `;
-    }
-});
 
 document.addEventListener('DOMContentLoaded', fetchQuestions);
