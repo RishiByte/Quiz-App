@@ -212,6 +212,30 @@ body {
     transform: none;
 }
 
+.new-record-badge {
+    margin-top: 14px;
+    display: inline-block;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    padding: 8px 20px;
+    border-radius: 999px;
+    animation: pulse-gold 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-gold {
+    from { box-shadow: 0 0 6px rgba(251, 191, 36, 0.3); }
+    to   { box-shadow: 0 0 18px rgba(251, 191, 36, 0.7); }
+}
+
+.high-score-display {
+    margin-top: 12px;
+    font-size: 0.95rem;
+    color: #94a3b8;
+}
+
 @media (max-width: 600px) {
     .quiz-container {
         padding: 30px 20px;

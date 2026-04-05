@@ -18,6 +18,18 @@ function decodeHTML(html) {
     return txt.value;
 }
 
+function getHighScore() {
+    return parseInt(localStorage.getItem('quizHighScore') || '0', 10);
+}
+
+function saveHighScore(newScore) {
+    if (newScore > getHighScore()) {
+        localStorage.setItem('quizHighScore', newScore);
+        return true; // new record
+    }
+    return false;
+}
+
 function startTimer() {
     let timeLeft = TIME_LIMIT;
     if(timerElement) {
@@ -48,11 +60,17 @@ function advanceToNextQuestion() {
             currentQuestionIndex++;
             renderQuestion();
         } else {
+            const isNewRecord = saveHighScore(score);
+            const highScore = getHighScore();
             if(quizContainer) quizContainer.classList.remove('fade-out');
             if(quizContainer) quizContainer.innerHTML = `
                 <div style="text-align: center; padding: 40px;">
                     <h2>Quiz Completed!</h2>
                     <p style="font-size: 24px; margin-top: 20px;">Your score: <strong>${score} / ${questions.length}</strong></p>
+                    ${isNewRecord
+                        ? `<p class="new-record-badge">🏆 New High Score!</p>`
+                        : `<p class="high-score-display">🥇 Best: <strong>${highScore} / ${questions.length}</strong></p>`
+                    }
                     <button class="next-btn" style="margin-top: 30px;" onclick="location.reload()">Restart Quiz</button>
                 </div>
             `;
