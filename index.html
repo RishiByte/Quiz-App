@@ -10,7 +10,44 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="quiz-container">
+
+    <!-- START SCREEN -->
+    <div class="start-screen" id="start-screen">
+        <div class="start-card">
+            <div class="start-icon">🧠</div>
+            <h1 class="start-title">Trivia Quiz</h1>
+            <p class="start-subtitle">Test your knowledge across dozens of categories</p>
+
+            <div class="form-group">
+                <label class="form-label" for="category-select">Choose a Category</label>
+                <div class="select-wrapper">
+                    <select id="category-select" class="category-select">
+                        <option value="">🎲 Any Category</option>
+                        <option value="9">🌍 General Knowledge</option>
+                        <option value="10">📚 Books</option>
+                        <option value="11">🎬 Film</option>
+                        <option value="12">🎵 Music</option>
+                        <option value="14">📺 Television</option>
+                        <option value="15">🎮 Video Games</option>
+                        <option value="17">🔬 Science &amp; Nature</option>
+                        <option value="18">💻 Computers</option>
+                        <option value="19">📐 Mathematics</option>
+                        <option value="21">⚽ Sports</option>
+                        <option value="22">🌎 Geography</option>
+                        <option value="23">🏛️ History</option>
+                        <option value="27">🐾 Animals</option>
+                        <option value="28">🚗 Vehicles</option>
+                    </select>
+                    <span class="select-arrow">▾</span>
+                </div>
+            </div>
+
+            <button class="start-btn" id="start-btn">Start Quiz →</button>
+        </div>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div class="quiz-container" id="quiz-container" style="display:none;">
         <div class="quiz-header">
             <div class="header-top">
                 <span class="question-number">Question 1 of 10</span>
@@ -20,22 +57,18 @@
                 <div class="progress-fill" style="width: 10%;"></div>
             </div>
         </div>
-        
+
         <div class="question-section">
-            <h2 class="question-text">Which planet is known as the Red Planet?</h2>
+            <h2 class="question-text">Loading questions...</h2>
         </div>
-        
-        <div class="options-section">
-            <button class="option-btn">Venus</button>
-            <button class="option-btn selected">Mars</button>
-            <button class="option-btn">Jupiter</button>
-            <button class="option-btn">Saturn</button>
-        </div>
-        
+
+        <div class="options-section"></div>
+
         <div class="quiz-footer">
             <button class="next-btn">Next Question</button>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
