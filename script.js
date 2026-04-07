@@ -33,6 +33,8 @@ function saveHighScore(newScore) {
     return false;
 }
 
+/* ── Timer ────────────────────────────────────── */
+
 function startTimer() {
     let timeLeft = TIME_LIMIT;
     if (timerElement) {
@@ -51,49 +53,195 @@ function startTimer() {
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            advanceToNextQuestion();
+            // Show correct answer before advancing
+            revealCorrectAnswer();
+            setTimeout(() => advanceToNextQuestion(), 1200);
         }
     }, 1000);
 }
 
+function revealCorrectAnswer() {
+    if (optionsSection.classList.contains('answered')) return;
+    optionsSection.classList.add('answered');
+    const currentQuestion = questions[currentQuestionIndex];
+    const allOptions = document.querySelectorAll('.option-btn');
+    allOptions.forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === currentQuestion.correctAnswer) {
+            btn.classList.add('correct');
+        }
+    });
+}
+
+/* ── Navigation ───────────────────────────────── */
+
 function advanceToNextQuestion() {
+    clearInterval(timerInterval);
     if (quizContainer) quizContainer.classList.add('fade-out');
+
     setTimeout(() => {
         if (currentQuestionIndex < questions.length - 1) {
             currentQuestionIndex++;
             renderQuestion();
         } else {
-            const isNewRecord = saveHighScore(score);
-            const highScore = getHighScore();
-            if (quizContainer) quizContainer.classList.remove('fade-out');
-            if (quizContainer) quizContainer.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <h2>Quiz Completed!</h2>
-                    <p style="font-size: 24px; margin-top: 20px;">Your score: <strong>${score} / ${questions.length}</strong></p>
-                    ${isNewRecord
-                    ? `<p class="new-record-badge">🏆 New High Score!</p>`
-                    : `<p class="high-score-display">🥇 Best: <strong>${highScore} / ${questions.length}</strong></p>`
-                }
-                    <button class="next-btn" style="margin-top: 30px;" onclick="location.reload()">Restart Quiz</button>
-                </div>
-            `;
+            showResults();
         }
     }, 300);
 }
 
-// --- Start screen ---
+/* ── Results Screen ───────────────────────────── */
+
+function getResultEmoji(pct) {
+    if (pct === 100) return '🏆';
+    if (pct >= 80)  return '🌟';
+    if (pct >= 60)  return '🎉';
+    if (pct >= 40)  return '💪';
+    return '📚';
+}
+
+function getResultTitle(pct) {
+    if (pct === 100) return 'Perfect Score!';
+    if (pct >= 80)  return 'Outstanding!';
+    if (pct >= 60)  return 'Well Done!';
+    if (pct >= 40)  return 'Good Effort!';
+    return 'Keep Practicing!';
+}
+
+function showResults() {
+    const isNewRecord = saveHighScore(score);
+    const highScore = getHighScore();
+    const pct = Math.round((score / questions.length) * 100);
+    const circumference = 314; // 2 * π * 50
+    const dashOffset = circumference - (circumference * pct / 100);
+
+    if (quizContainer) quizContainer.classList.remove('fade-out');
+    if (quizContainer) {
+        quizContainer.innerHTML = `
+            <div class="result-screen">
+                <div class="result-emoji">${getResultEmoji(pct)}</div>
+                <h2 class="result-title">${getResultTitle(pct)}</h2>
+
+                <div class="score-ring-wrap">
+                    <svg viewBox="0 0 120 120" width="100%" height="100%">
+                        <defs>
+                            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#6366f1"/>
+                                <stop offset="100%" stop-color="#8b5cf6"/>
+                            </linearGradient>
+                        </defs>
+                        <circle class="score-ring-bg" cx="60" cy="60" r="50"/>
+                        <circle class="score-ring-fill" cx="60" cy="60" r="50"
+                                style="stroke-dashoffset: ${circumference}"/>
+                    </svg>
+                    <div class="score-ring-text">${pct}%</div>
+                </div>
+
+                <p class="result-score">You got <strong>${score} / ${questions.length}</strong> correct</p>
+
+                ${isNewRecord
+                    ? `<p class="new-record-badge">🏆 New High Score!</p>`
+                    : `<p class="high-score-display">🥇 Best: <strong>${highScore} / ${questions.length}</strong></p>`
+                }
+
+                <button class="restart-btn" id="restart-btn">↻ Play Again</button>
+            </div>
+        `;
+
+        // Animate score ring after mount
+        requestAnimationFrame(() => {
+            const ringFill = quizContainer.querySelector('.score-ring-fill');
+            if (ringFill) {
+                ringFill.style.strokeDashoffset = dashOffset;
+            }
+        });
+
+        // Restart without page reload
+        document.getElementById('restart-btn').addEventListener('click', restartQuiz);
+    }
+}
+
+/* ── Restart Quiz ─────────────────────────────── */
+
+function restartQuiz() {
+    // Reset state
+    questions = [];
+    currentQuestionIndex = 0;
+    score = 0;
+    clearInterval(timerInterval);
+
+    // Rebuild quiz container HTML
+    quizContainer.style.display = 'none';
+    quizContainer.innerHTML = `
+        <div class="quiz-header">
+            <div class="header-top">
+                <span class="question-number">Question 1 of 10</span>
+                <span class="timer">15s</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 10%;"></div>
+            </div>
+        </div>
+        <div class="question-section">
+            <h2 class="question-text">Loading questions...</h2>
+        </div>
+        <div class="options-section"></div>
+        <div class="quiz-footer">
+            <button class="next-btn">Next Question</button>
+        </div>
+    `;
+
+    // Re-cache elements
+    recacheElements();
+
+    // Show start screen
+    startScreen.style.display = 'flex';
+
+    // Replay start card animation
+    const startCard = startScreen.querySelector('.start-card');
+    if (startCard) {
+        startCard.style.animation = 'none';
+        startCard.offsetHeight; // force reflow
+        startCard.style.animation = '';
+    }
+}
+
+function recacheElements() {
+    // These are let/const at module level but we reassign the inner references
+    // Since they're const, we read from the DOM each time in render
+}
+
+/* ── Start Quiz ───────────────────────────────── */
+
 startBtn.addEventListener('click', () => {
     const categoryId = categorySelect.value;
-    startScreen.style.display = 'none';
-    quizContainer.style.display = 'flex';
-    fetchQuestions(categoryId);
+
+    // Fade out the start screen
+    const startCard = startScreen.querySelector('.start-card');
+    if (startCard) {
+        startCard.style.animation = 'fadeOut 0.3s ease-in forwards';
+    }
+
+    setTimeout(() => {
+        startScreen.style.display = 'none';
+        quizContainer.style.display = 'flex';
+
+        // Re-trigger quiz container entrance
+        quizContainer.style.animation = 'none';
+        quizContainer.offsetHeight;
+        quizContainer.style.animation = '';
+
+        fetchQuestions(categoryId);
+    }, 300);
 });
 
 async function fetchQuestions(categoryId = '') {
-    questionTextElement.textContent = 'Loading questions...';
-    optionsSection.innerHTML = '';
-    nextButton.style.display = 'block';
-    nextButton.disabled = true;
+    const qText = quizContainer.querySelector('.question-text');
+    const opts  = quizContainer.querySelector('.options-section');
+    const nBtn  = quizContainer.querySelector('.next-btn');
+
+    if (qText) qText.textContent = 'Loading questions...';
+    if (opts)  opts.innerHTML = '';
+    if (nBtn)  { nBtn.style.display = 'block'; nBtn.disabled = true; }
 
     let url = 'https://opentdb.com/api.php?amount=10&type=multiple';
     if (categoryId) url += `&category=${categoryId}`;
@@ -108,9 +256,7 @@ async function fetchQuestions(categoryId = '') {
                 correctAnswer: decodeHTML(q.correct_answer),
                 options: [...q.incorrect_answers.map(decodeHTML), decodeHTML(q.correct_answer)]
             };
-
             formattedQuestion.options.sort(() => Math.random() - 0.5);
-
             return formattedQuestion;
         });
 
@@ -119,50 +265,73 @@ async function fetchQuestions(categoryId = '') {
         renderQuestion();
     } catch (error) {
         console.error('Error fetching questions:', error);
-        questionTextElement.textContent = 'Failed to load questions. Please refresh the page.';
+        if (qText) qText.textContent = 'Failed to load questions. Please try again.';
     }
 }
+
+/* ── Render Question ──────────────────────────── */
 
 function renderQuestion() {
     if (questions.length === 0) return;
 
-    if (quizContainer) quizContainer.classList.remove('fade-out');
+    const qContainer = quizContainer;
+    const qText   = qContainer.querySelector('.question-text');
+    const opts    = qContainer.querySelector('.options-section');
+    const nBtn    = qContainer.querySelector('.next-btn');
+    const qNum    = qContainer.querySelector('.question-number');
+    const pFill   = qContainer.querySelector('.progress-fill');
+
+    if (qContainer) qContainer.classList.remove('fade-out');
     clearInterval(timerInterval);
-    optionsSection.classList.remove('answered');
-    if (nextButton) {
-        nextButton.style.display = 'block';
-        nextButton.disabled = true;
-    }
+    if (opts) opts.classList.remove('answered');
+    if (nBtn) { nBtn.style.display = 'block'; nBtn.disabled = true; }
 
     const currentQuestion = questions[currentQuestionIndex];
 
-    if (questionNumberElement) questionNumberElement.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
-    if (progressFill) progressFill.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+    if (qNum)  qNum.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+    if (pFill) pFill.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+
+    // Animate question section
+    const qSection = qContainer.querySelector('.question-section');
+    if (qSection) {
+        qSection.style.animation = 'none';
+        qSection.offsetHeight;
+        qSection.style.animation = 'scaleIn 0.35s ease-out';
+    }
 
     startTimer();
 
-    questionTextElement.innerHTML = currentQuestion.question;
+    if (qText) qText.innerHTML = currentQuestion.question;
+    if (opts)  opts.innerHTML = '';
 
-    optionsSection.innerHTML = '';
-
-    currentQuestion.options.forEach(option => {
+    currentQuestion.options.forEach((option, idx) => {
         const button = document.createElement('button');
         button.classList.add('option-btn');
-        button.innerHTML = option;
+        button.textContent = option;
+
+        // Staggered entrance animation
+        button.style.animationDelay = `${idx * 0.07}s`;
+
+        // Radial hover glow follows cursor
+        button.addEventListener('mousemove', (e) => {
+            const rect = button.getBoundingClientRect();
+            button.style.setProperty('--x', `${((e.clientX - rect.left) / rect.width) * 100}%`);
+            button.style.setProperty('--y', `${((e.clientY - rect.top) / rect.height) * 100}%`);
+        });
 
         button.addEventListener('click', () => {
-            if (optionsSection.classList.contains('answered')) return;
-            optionsSection.classList.add('answered');
+            if (opts.classList.contains('answered')) return;
+            opts.classList.add('answered');
             clearInterval(timerInterval);
-            if (nextButton) nextButton.disabled = false;
+            if (nBtn) nBtn.disabled = false;
 
             const isCorrect = option === currentQuestion.correctAnswer;
             if (isCorrect) score++;
 
-            const allOptions = document.querySelectorAll('.option-btn');
+            const allOptions = opts.querySelectorAll('.option-btn');
             allOptions.forEach(btn => {
                 btn.disabled = true;
-                if (btn.innerHTML === currentQuestion.correctAnswer) {
+                if (btn.textContent === currentQuestion.correctAnswer) {
                     btn.classList.add('correct');
                 } else if (btn === button && !isCorrect) {
                     btn.classList.add('incorrect');
@@ -170,9 +339,21 @@ function renderQuestion() {
             });
         });
 
-        optionsSection.appendChild(button);
+        if (opts) opts.appendChild(button);
     });
+
+    // Re-attach next button listener (needed after innerHTML rebuild)
+    const freshNextBtn = qContainer.querySelector('.next-btn');
+    if (freshNextBtn) {
+        freshNextBtn.addEventListener('click', () => {
+            if (!freshNextBtn.disabled) {
+                advanceToNextQuestion();
+            }
+        });
+    }
 }
+
+/* ── Initial Next Button Listener ─────────────── */
 
 if (nextButton) {
     nextButton.addEventListener('click', () => {
@@ -181,5 +362,3 @@ if (nextButton) {
         }
     });
 }
-
-
