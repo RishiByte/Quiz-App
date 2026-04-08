@@ -8,12 +8,14 @@ const startScreen    = document.getElementById('start-screen');
 const startBtn       = document.getElementById('start-btn');
 const categorySelect = document.getElementById('category-select');
 const quizContainer  = document.getElementById('quiz-container');
-const questionTextElement   = quizContainer.querySelector('.question-text');
-const timerElement          = quizContainer.querySelector('.timer');
-const optionsSection        = quizContainer.querySelector('.options-section');
-const nextButton            = quizContainer.querySelector('.next-btn');
-const questionNumberElement = quizContainer.querySelector('.question-number');
-const progressFill          = quizContainer.querySelector('.progress-fill');
+
+// Re-cacheable sub-elements of quizContainer
+let questionTextElement   = quizContainer.querySelector('.question-text');
+let timerElement          = quizContainer.querySelector('.timer');
+let optionsSection        = quizContainer.querySelector('.options-section');
+let nextButton            = quizContainer.querySelector('.next-btn');
+let questionNumberElement = quizContainer.querySelector('.question-number');
+let progressFill          = quizContainer.querySelector('.progress-fill');
 
 function decodeHTML(html) {
     const txt = document.createElement('textarea');
@@ -206,8 +208,12 @@ function restartQuiz() {
 }
 
 function recacheElements() {
-    // These are let/const at module level but we reassign the inner references
-    // Since they're const, we read from the DOM each time in render
+    questionTextElement   = quizContainer.querySelector('.question-text');
+    timerElement          = quizContainer.querySelector('.timer');
+    optionsSection        = quizContainer.querySelector('.options-section');
+    nextButton            = quizContainer.querySelector('.next-btn');
+    questionNumberElement = quizContainer.querySelector('.question-number');
+    progressFill          = quizContainer.querySelector('.progress-fill');
 }
 
 /* ── Start Quiz ───────────────────────────────── */
