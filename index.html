@@ -49,6 +49,19 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label class="form-label" for="difficulty-select">Select Difficulty</label>
+                <div class="select-wrapper">
+                    <select id="difficulty-select" class="category-select">
+                        <option value="">🎯 Any Difficulty</option>
+                        <option value="easy">🟢 Easy</option>
+                        <option value="medium">🟡 Medium</option>
+                        <option value="hard">🔴 Hard</option>
+                    </select>
+                    <span class="select-arrow">▾</span>
+                </div>
+            </div>
+
             <button class="start-btn" id="start-btn">Start Quiz →</button>
         </div>
     </div>
@@ -58,6 +71,7 @@
         <div class="quiz-header">
             <div class="header-top">
                 <span class="question-number">Question 1 of 10</span>
+                <span class="progress-percentage">0%</span>
                 <span class="timer">15s</span>
             </div>
             <div class="progress-bar">

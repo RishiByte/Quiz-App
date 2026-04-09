@@ -17,8 +17,9 @@ function playSound(audio) {
 
 const startScreen    = document.getElementById('start-screen');
 const startBtn       = document.getElementById('start-btn');
-const categorySelect = document.getElementById('category-select');
-const quizContainer  = document.getElementById('quiz-container');
+const categorySelect   = document.getElementById('category-select');
+const difficultySelect = document.getElementById('difficulty-select');
+const quizContainer    = document.getElementById('quiz-container');
 
 // Theme management
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -58,6 +59,7 @@ let optionsSection        = quizContainer.querySelector('.options-section');
 let nextButton            = quizContainer.querySelector('.next-btn');
 let questionNumberElement = quizContainer.querySelector('.question-number');
 let progressFill          = quizContainer.querySelector('.progress-fill');
+let progressText          = quizContainer.querySelector('.progress-percentage');
 
 function decodeHTML(html) {
     const txt = document.createElement('textarea');
@@ -225,8 +227,9 @@ function restartQuiz() {
                 <span class="timer">15s</span>
             </div>
             <div class="progress-bar">
-                <div class="progress-fill" style="width: 10%;"></div>
+                <div class="progress-fill" style="width: 0%;"></div>
             </div>
+            <div class="progress-percentage">0%</div>
         </div>
         <div class="question-section">
             <h2 class="question-text">Loading questions...</h2>
@@ -259,6 +262,7 @@ function recacheElements() {
     nextButton            = quizContainer.querySelector('.next-btn');
     questionNumberElement = quizContainer.querySelector('.question-number');
     progressFill          = quizContainer.querySelector('.progress-fill');
+    progressText          = quizContainer.querySelector('.progress-percentage');
 }
 
 /* ── Start Quiz ───────────────────────────────── */
@@ -282,11 +286,11 @@ startBtn.addEventListener('click', () => {
         quizContainer.offsetHeight;
         quizContainer.style.animation = '';
 
-        fetchQuestions(categoryId);
+        fetchQuestions(categoryId, difficultySelect.value);
     }, 300);
 });
 
-async function fetchQuestions(categoryId = '') {
+async function fetchQuestions(categoryId = '', difficulty = '') {
     const qText = quizContainer.querySelector('.question-text');
     const opts  = quizContainer.querySelector('.options-section');
     const nBtn  = quizContainer.querySelector('.next-btn');
@@ -297,6 +301,7 @@ async function fetchQuestions(categoryId = '') {
 
     let url = 'https://opentdb.com/api.php?amount=10&type=multiple';
     if (categoryId) url += `&category=${categoryId}`;
+    if (difficulty) url += `&difficulty=${difficulty}`;
 
     try {
         const response = await fetch(url);
@@ -340,8 +345,10 @@ function renderQuestion() {
 
     const currentQuestion = questions[currentQuestionIndex];
 
+    const progressPct = Math.round(((currentQuestionIndex) / questions.length) * 100);
     if (qNum)  qNum.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
     if (pFill) pFill.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+    if (progressText) progressText.textContent = `${Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}%`;
 
     // Animate question section
     const qSection = qContainer.querySelector('.question-section');
