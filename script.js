@@ -4,10 +4,52 @@ let score = 0;
 let timerInterval;
 const TIME_LIMIT = 15;
 
+// Audio Assets
+const correctSound = new Audio('https://raw.githubusercontent.com/shubhamsigdar1/Quiz-App/master/correct.mp3');
+const wrongSound   = new Audio('https://raw.githubusercontent.com/shubhamsigdar1/Quiz-App/master/wrong.mp3');
+const clickSound   = new Audio('https://raw.githubusercontent.com/ArunMichaelTarigan/quiz-app-javascript/master/sound/click.mp3');
+
+function playSound(audio) {
+    audio.currentTime = 0;
+    audio.play().catch(err => console.log("Audio play blocked until user interaction", err));
+}
+
+
 const startScreen    = document.getElementById('start-screen');
 const startBtn       = document.getElementById('start-btn');
 const categorySelect = document.getElementById('category-select');
 const quizContainer  = document.getElementById('quiz-container');
+
+// Theme management
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
+const themeIcon      = document.getElementById('theme-icon');
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('quiz-theme') || 'dark';
+    applyTheme(savedTheme);
+}
+
+function applyTheme(theme) {
+    if (theme === 'light') {
+        document.body.classList.add('light-mode');
+        themeIcon.textContent = '🌙';
+    } else {
+        document.body.classList.remove('light-mode');
+        themeIcon.textContent = '☀️';
+    }
+    localStorage.setItem('quiz-theme', theme);
+}
+
+function toggleTheme() {
+    playSound(clickSound);
+    const isLight = document.body.classList.contains('light-mode');
+    applyTheme(isLight ? 'dark' : 'light');
+}
+
+themeToggleBtn.addEventListener('click', toggleTheme);
+
+// Initialize theme immediately
+initTheme();
 
 // Re-cacheable sub-elements of quizContainer
 let questionTextElement   = quizContainer.querySelector('.question-text');
@@ -158,7 +200,10 @@ function showResults() {
         });
 
         // Restart without page reload
-        document.getElementById('restart-btn').addEventListener('click', restartQuiz);
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            playSound(clickSound);
+            restartQuiz();
+        });
     }
 }
 
@@ -219,6 +264,7 @@ function recacheElements() {
 /* ── Start Quiz ───────────────────────────────── */
 
 startBtn.addEventListener('click', () => {
+    playSound(clickSound);
     const categoryId = categorySelect.value;
 
     // Fade out the start screen
@@ -332,7 +378,12 @@ function renderQuestion() {
             if (nBtn) nBtn.disabled = false;
 
             const isCorrect = option === currentQuestion.correctAnswer;
-            if (isCorrect) score++;
+            if (isCorrect) {
+                score++;
+                playSound(correctSound);
+            } else {
+                playSound(wrongSound);
+            }
 
             const allOptions = opts.querySelectorAll('.option-btn');
             allOptions.forEach(btn => {
@@ -353,6 +404,7 @@ function renderQuestion() {
     if (freshNextBtn) {
         freshNextBtn.addEventListener('click', () => {
             if (!freshNextBtn.disabled) {
+                playSound(clickSound);
                 advanceToNextQuestion();
             }
         });
@@ -364,6 +416,7 @@ function renderQuestion() {
 if (nextButton) {
     nextButton.addEventListener('click', () => {
         if (!nextButton.disabled) {
+            playSound(clickSound);
             advanceToNextQuestion();
         }
     });
