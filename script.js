@@ -30,25 +30,25 @@ const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const themeIcon      = document.getElementById('theme-icon');
 
 function initTheme() {
-    const savedTheme = localStorage.getItem('quiz-theme') || 'dark';
+    const savedTheme = localStorage.getItem('quiz-theme') || 'light';
     applyTheme(savedTheme);
 }
 
 function applyTheme(theme) {
-    if (theme === 'light') {
-        document.body.classList.add('light-mode');
-        themeIcon.textContent = '🌙';
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeIcon.textContent = '☀️'; // click to go light
     } else {
-        document.body.classList.remove('light-mode');
-        themeIcon.textContent = '☀️';
+        document.body.classList.remove('dark-mode');
+        themeIcon.textContent = '🌙'; // click to go dark
     }
     localStorage.setItem('quiz-theme', theme);
 }
 
 function toggleTheme() {
     playSound(clickSound);
-    const isLight = document.body.classList.contains('light-mode');
-    applyTheme(isLight ? 'dark' : 'light');
+    const isDark = document.body.classList.contains('dark-mode');
+    applyTheme(isDark ? 'light' : 'dark');
 }
 
 themeToggleBtn.addEventListener('click', toggleTheme);
