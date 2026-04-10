@@ -2,6 +2,10 @@ let questions = [];
 let currentQuestionIndex = 0;
 let score = 0;
 let timerInterval;
+let autoAdvanceTimeout;
+let isAdvancing = false;
+let timeLeft = 15;
+let isPaused = false;
 const TIME_LIMIT = 15;
 
 // Audio Assets
@@ -60,6 +64,7 @@ let nextButton            = quizContainer.querySelector('.next-btn');
 let questionNumberElement = quizContainer.querySelector('.question-number');
 let progressFill          = quizContainer.querySelector('.progress-fill');
 let progressText          = quizContainer.querySelector('.progress-percentage');
+let pauseBtn;
 
 function decodeHTML(html) {
     const txt = document.createElement('textarea');
@@ -82,13 +87,14 @@ function saveHighScore(newScore) {
 /* ── Timer ────────────────────────────────────── */
 
 function startTimer() {
-    let timeLeft = TIME_LIMIT;
     if (timerElement) {
         timerElement.textContent = `${timeLeft}s`;
         timerElement.classList.remove('warning');
     }
 
     timerInterval = setInterval(() => {
+        if (isPaused) return;
+
         timeLeft--;
         if (timerElement) {
             timerElement.textContent = `${timeLeft}s`;
@@ -99,11 +105,28 @@ function startTimer() {
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            // Show correct answer before advancing
+            if (pauseBtn) pauseBtn.disabled = true;
             revealCorrectAnswer();
-            setTimeout(() => advanceToNextQuestion(), 1200);
+            autoAdvanceTimeout = setTimeout(() => advanceToNextQuestion(), 1200);
         }
     }, 1000);
+}
+
+function togglePause() {
+    if (optionsSection.classList.contains('answered')) return;
+    
+    isPaused = !isPaused;
+    playSound(clickSound);
+    
+    if (pauseBtn) {
+        pauseBtn.textContent = isPaused ? '▶' : '⏸';
+        pauseBtn.setAttribute('aria-label', isPaused ? 'Resume quiz' : 'Pause quiz');
+    }
+    
+    if (optionsSection) {
+        optionsSection.style.pointerEvents = isPaused ? 'none' : 'auto';
+        optionsSection.style.opacity = isPaused ? '0.5' : '1';
+    }
 }
 
 function revealCorrectAnswer() {
@@ -122,10 +145,15 @@ function revealCorrectAnswer() {
 /* ── Navigation ───────────────────────────────── */
 
 function advanceToNextQuestion() {
+    if (isAdvancing) return;
+    isAdvancing = true;
+
     clearInterval(timerInterval);
+    if (autoAdvanceTimeout) clearTimeout(autoAdvanceTimeout);
     if (quizContainer) quizContainer.classList.add('fade-out');
 
     setTimeout(() => {
+        isAdvancing = false;
         if (currentQuestionIndex < questions.length - 1) {
             currentQuestionIndex++;
             renderQuestion();
@@ -156,7 +184,9 @@ function getResultTitle(pct) {
 function showResults() {
     const isNewRecord = saveHighScore(score);
     const highScore = getHighScore();
-    const pct = Math.round((score / questions.length) * 100);
+    const totalQuestions = questions.length;
+    const pct = Math.round((score / totalQuestions) * 100);
+    const wrongAnswers = totalQuestions - score;
     const circumference = 314; // 2 * π * 50
     const dashOffset = circumference - (circumference * pct / 100);
 
@@ -182,14 +212,28 @@ function showResults() {
                     <div class="score-ring-text">${pct}%</div>
                 </div>
 
-                <p class="result-score">You got <strong>${score} / ${questions.length}</strong> correct</p>
+                <div class="result-stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-label">Correct</span>
+                        <span class="stat-value correct">${score}</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Wrong</span>
+                        <span class="stat-value wrong">${wrongAnswers}</span>
+                    </div>
+                </div>
+
+                <p class="result-score">Accuracy Rate: <strong>${pct}%</strong></p>
 
                 ${isNewRecord
                     ? `<p class="new-record-badge">🏆 New High Score!</p>`
-                    : `<p class="high-score-display">🥇 Best: <strong>${highScore} / ${questions.length}</strong></p>`
+                    : `<p class="high-score-display">🥇 Best: <strong>${highScore} / ${totalQuestions}</strong></p>`
                 }
 
-                <button class="restart-btn" id="restart-btn">↻ Play Again</button>
+                <div class="result-actions">
+                    <button class="review-btn" id="review-btn">📋 Review Answers</button>
+                    <button class="restart-btn" id="restart-btn" style="margin-top: 0;">↻ Play Again</button>
+                </div>
             </div>
         `;
 
@@ -201,12 +245,58 @@ function showResults() {
             }
         });
 
-        // Restart without page reload
+        document.getElementById('review-btn').addEventListener('click', () => {
+            playSound(clickSound);
+            showReview();
+        });
+
         document.getElementById('restart-btn').addEventListener('click', () => {
             playSound(clickSound);
             restartQuiz();
         });
     }
+}
+
+function showReview() {
+    if (!quizContainer) return;
+    
+    quizContainer.innerHTML = `
+        <div class="review-screen">
+            <h2 class="review-title">Answer Review</h2>
+            <div class="review-list">
+                ${questions.map((q, i) => {
+                    const isCorrect = q.userAnswer === q.correctAnswer;
+                    return `
+                        <div class="review-card">
+                            <h3 class="review-question">${i + 1}. ${q.question}</h3>
+                            <div class="review-answers">
+                                <div class="answer-row">
+                                    <span class="answer-indicator indicator-user">Your Answer</span>
+                                    <span class="answer-text ${isCorrect ? 'correct' : 'wrong'}">
+                                        ${q.userAnswer || '<span style="opacity:0.5">Time Expired</span>'}
+                                    </span>
+                                </div>
+                                ${!isCorrect ? `
+                                <div class="answer-row">
+                                    <span class="answer-indicator indicator-correct">Correct Answer</span>
+                                    <span class="answer-text correct">${q.correctAnswer}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            <div class="result-actions">
+                <button class="restart-btn" id="restart-from-review-btn">↻ Play Again</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('restart-from-review-btn').addEventListener('click', () => {
+        playSound(clickSound);
+        restartQuiz();
+    });
 }
 
 /* ── Restart Quiz ─────────────────────────────── */
@@ -216,6 +306,8 @@ function restartQuiz() {
     questions = [];
     currentQuestionIndex = 0;
     score = 0;
+    isAdvancing = false;
+    if (startBtn) startBtn.disabled = false;
     clearInterval(timerInterval);
 
     // Rebuild quiz container HTML
@@ -224,12 +316,15 @@ function restartQuiz() {
         <div class="quiz-header">
             <div class="header-top">
                 <span class="question-number">Question 1 of 10</span>
-                <span class="timer">15s</span>
+                <span class="progress-percentage">0%</span>
+                <div class="timer-group">
+                    <span class="timer">15s</span>
+                    <button id="pause-btn" class="pause-btn" aria-label="Pause quiz">⏸</button>
+                </div>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: 0%;"></div>
             </div>
-            <div class="progress-percentage">0%</div>
         </div>
         <div class="question-section">
             <h2 class="question-text">Loading questions...</h2>
@@ -263,11 +358,18 @@ function recacheElements() {
     questionNumberElement = quizContainer.querySelector('.question-number');
     progressFill          = quizContainer.querySelector('.progress-fill');
     progressText          = quizContainer.querySelector('.progress-percentage');
+    pauseBtn              = quizContainer.querySelector('#pause-btn');
+    
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', togglePause);
+    }
 }
 
 /* ── Start Quiz ───────────────────────────────── */
 
 startBtn.addEventListener('click', () => {
+    if (startBtn.disabled) return;
+    startBtn.disabled = true;
     playSound(clickSound);
     const categoryId = categorySelect.value;
 
@@ -290,12 +392,14 @@ startBtn.addEventListener('click', () => {
     }, 300);
 });
 
-async function fetchQuestions(categoryId = '', difficulty = '') {
+async function fetchQuestions(categoryId = '', difficulty = '', isRetry = false) {
     const qText = quizContainer.querySelector('.question-text');
     const opts  = quizContainer.querySelector('.options-section');
     const nBtn  = quizContainer.querySelector('.next-btn');
 
-    if (qText) qText.textContent = 'Loading questions...';
+    if (qText) {
+        qText.textContent = isRetry ? 'Trying alternative settings...' : 'Loading questions...';
+    }
     if (opts)  opts.innerHTML = '';
     if (nBtn)  { nBtn.style.display = 'block'; nBtn.disabled = true; }
 
@@ -306,6 +410,26 @@ async function fetchQuestions(categoryId = '', difficulty = '') {
     try {
         const response = await fetch(url);
         const data = await response.json();
+
+        // Handle OpenTDB Response Codes or insufficient questions
+        if (data.response_code === 1 || (data.results && data.results.length < 10)) { // No Results or Not Enough
+            console.warn("Not enough results for:", { categoryId, difficulty, fetched: data.results?.length });
+            if (difficulty) {
+                // Try removing difficulty first
+                return fetchQuestions(categoryId, '', true);
+            } else if (categoryId) {
+                // Try removing category if difficulty was already empty
+                return fetchQuestions('', '', true);
+            }
+        } else if (data.response_code === 5) { // Rate Limit
+            console.warn("Rate limited, retrying in 1s...");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return fetchQuestions(categoryId, difficulty, isRetry);
+        }
+
+        if (data.response_code !== 0 || !data.results || data.results.length === 0) {
+            throw new Error(`API Error: Code ${data.response_code}`);
+        }
 
         questions = data.results.map(q => {
             const formattedQuestion = {
@@ -358,6 +482,8 @@ function renderQuestion() {
         qSection.style.animation = 'scaleIn 0.35s ease-out';
     }
 
+    timeLeft = TIME_LIMIT;
+    isPaused = false;
     startTimer();
 
     if (qText) qText.innerHTML = currentQuestion.question;
@@ -379,9 +505,11 @@ function renderQuestion() {
         });
 
         button.addEventListener('click', () => {
-            if (opts.classList.contains('answered')) return;
+            if (opts.classList.contains('answered') || isPaused) return;
+            currentQuestion.userAnswer = option;
             opts.classList.add('answered');
             clearInterval(timerInterval);
+            if (pauseBtn) pauseBtn.disabled = true;
             if (nBtn) nBtn.disabled = false;
 
             const isCorrect = option === currentQuestion.correctAnswer;
@@ -401,16 +529,22 @@ function renderQuestion() {
                     btn.classList.add('incorrect');
                 }
             });
+
+            // Auto-advance after answering to keep the flow smooth
+            autoAdvanceTimeout = setTimeout(() => advanceToNextQuestion(), 1500);
         });
 
         if (opts) opts.appendChild(button);
     });
 
-    // Re-attach next button listener (needed after innerHTML rebuild)
-    const freshNextBtn = qContainer.querySelector('.next-btn');
-    if (freshNextBtn) {
+    // Clone the next button to remove ALL previous listeners (prevents stacking)
+    const oldNextBtn = qContainer.querySelector('.next-btn');
+    if (oldNextBtn) {
+        const freshNextBtn = oldNextBtn.cloneNode(true);
+        oldNextBtn.parentNode.replaceChild(freshNextBtn, oldNextBtn);
         freshNextBtn.addEventListener('click', () => {
-            if (!freshNextBtn.disabled) {
+            if (!freshNextBtn.disabled && !isAdvancing) {
+                freshNextBtn.disabled = true;
                 playSound(clickSound);
                 advanceToNextQuestion();
             }
@@ -418,13 +552,3 @@ function renderQuestion() {
     }
 }
 
-/* ── Initial Next Button Listener ─────────────── */
-
-if (nextButton) {
-    nextButton.addEventListener('click', () => {
-        if (!nextButton.disabled) {
-            playSound(clickSound);
-            advanceToNextQuestion();
-        }
-    });
-}
