@@ -111,7 +111,7 @@ body {
 @keyframes fadeOut {
     to {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(-8px) scale(0.98);
     }
 }
 
@@ -129,11 +129,11 @@ body {
 @keyframes scaleIn {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.96) translateY(8px);
     }
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
@@ -539,9 +539,9 @@ body {
 
 .option-btn:hover {
     background-color: var(--option-hover);
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.02);
     border-color: var(--accent-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .option-btn:active {
@@ -951,28 +951,29 @@ body {
     }
 
     .question-text {
-        font-size: 1.15rem;
-        line-height: 1.45;
+        font-size: 1.2rem;
+        line-height: 1.5;
+        margin-bottom: 8px;
     }
 
     .option-btn {
-        padding: 14px 14px;
-        font-size: 0.92rem;
-        border-radius: 10px;
+        padding: 16px 16px;
+        font-size: 1rem;
+        border-radius: 12px;
     }
 
     .options-section {
-        gap: 10px;
+        gap: 12px;
     }
 
     .next-btn {
-        padding: 12px 22px;
-        font-size: 0.92rem;
+        padding: 14px 22px;
+        font-size: 1rem;
         width: 100%;
     }
 
     .quiz-footer {
-        margin-top: 4px;
+        margin-top: 8px;
     }
 
     .result-title {

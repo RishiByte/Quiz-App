@@ -552,3 +552,48 @@ function renderQuestion() {
     }
 }
 
+/* ── Keyboard Controls ────────────────────────── */
+
+document.addEventListener('keydown', (e) => {
+    // Basic guards
+    if (isPaused) return;
+
+    // Handle Enter key for 'Next Question' or 'Start Quiz' / 'Restart'
+    if (e.key === 'Enter') {
+        // If start screen is visible
+        if (startScreen.style.display !== 'none' && startBtn && !startBtn.disabled) {
+            startBtn.click();
+            return;
+        }
+
+        // If quiz is active, press next button
+        if (quizContainer.style.display === 'flex') {
+            const freshNextBtn = quizContainer.querySelector('.next-btn');
+            // If the next button is visible and enabled
+            if (freshNextBtn && !freshNextBtn.disabled) {
+                freshNextBtn.click();
+                return;
+            }
+            
+            // If results screen is visible
+            const restartBtn = quizContainer.querySelector('#restart-btn');
+            const reviewRestartBtn = quizContainer.querySelector('#restart-from-review-btn');
+            if (restartBtn && restartBtn.offsetParent !== null) { // visible
+                restartBtn.click();
+            } else if (reviewRestartBtn && reviewRestartBtn.offsetParent !== null) {
+                reviewRestartBtn.click();
+            }
+        }
+    }
+
+    // Handle 1-4 keys for selecting an option during the quiz
+    if (['1', '2', '3', '4'].includes(e.key) && quizContainer.style.display === 'flex') {
+        const optionIndex = parseInt(e.key) - 1;
+        if (optionsSection) {
+            const allOptions = optionsSection.querySelectorAll('.option-btn');
+            if (allOptions[optionIndex] && !allOptions[optionIndex].disabled) {
+                allOptions[optionIndex].click();
+            }
+        }
+    }
+});
